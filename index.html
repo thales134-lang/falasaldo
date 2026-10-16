@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>FalaSaldo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px 18px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f6f8; color: #172033;
+    }
+    main { max-width: 480px; margin: 35px auto; }
+    .logo { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; }
+    .logo span { color: #16a36a; }
+    .card {
+      background: white; padding: 22px; border-radius: 20px;
+      margin-top: 22px; box-shadow: 0 5px 25px #00000008;
+    }
+    p { line-height: 1.5; color: #647084; }
+    label { display: block; font-size: 14px; font-weight: 600; margin: 18px 0 7px; }
+    input {
+      width: 100%; padding: 14px; border: 1px solid #dce1e8;
+      border-radius: 10px; font-size: 15px; background: white;
+    }
+    button {
+      width: 100%; padding: 15px; margin-top: 15px; border: 0;
+      border-radius: 11px; background: #16a36a; color: white;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+    }
+    #status { font-size: 14px; overflow-wrap: anywhere; }
+    .muted { font-size: 12px; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="logo">Fala<span>Saldo</span></div>
+  <p>Teu dinheiro organizado. Tu fala, o FalaSaldo te ajuda.</p>
+
+  <section class="card">
+    <h2>Conectar aplicativo</h2>
+    <p>Vamos conectar teu projeto ao Supabase.</p>
+
+    <label for="url">URL do projeto Supabase</label>
+    <input id="url" type="url" placeholder="https://teuprojeto.supabase.co"
+      autocomplete="url">
+
+    <label for="key">Publishable key</label>
+    <input id="key" type="password" placeholder="sb_publishable_..."
+      autocomplete="off">
+
+    <button id="connect">Conectar FalaSaldo</button>
+    <p id="status" role="status">Aguardando configuração.</p>
+    <p class="muted">Usa somente a URL do teu projeto e a publishable key.
+    Nunca coloques uma secret key aqui.</p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const urlInput = document.getElementById('url');
+const keyInput = document.getElementById('key');
+const status = document.getElementById('status');
+
+document.getElementById('connect').addEventListener('click', async () => {
+  const url = urlInput.value.trim().replace(/\/+$/, '');
+  const key = keyInput.value.trim();
+
+  if (!/^https:\/\/[a-zA-Z0-9.-]+\.supabase\.co$/.test(url)) {
+    status.textContent = 'Confere a URL do projeto e tenta novamente.';
+    return;
+  }
+  if (!key.startsWith('sb_publishable_') && !key.startsWith('eyJ')) {
+    status.textContent = 'Confere a publishable key.';
+    return;
+  }
+
+  status.textContent = 'Conectando...';
+  try {
+    const client = window.supabase.createClient(url, key);
+    const { error } = await client.auth.getSession();
+    if (error) throw error;
+
+    sessionStorage.setItem('falasaldo_url', url);
+    sessionStorage.setItem('falasaldo_key', key);
+    status.textContent =
+      'Conexão verificada! Próximo passo: configurar acesso e lançamentos.';
+    keyInput.value = '';
+  } catch (e) {
+    status.textContent = 'Não foi possível verificar: ' + e.message;
+  }
+});
+</script>
+</body>
+</html>
