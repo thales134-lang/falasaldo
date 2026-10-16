@@ -2,97 +2,275 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111827">
-  <title>FalaSaldo</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 24px 18px;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f5f6f8; color: #172033;
-    }
-    main { max-width: 480px; margin: 35px auto; }
-    .logo { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; }
-    .logo span { color: #16a36a; }
-    .card {
-      background: white; padding: 22px; border-radius: 20px;
-      margin-top: 22px; box-shadow: 0 5px 25px #00000008;
-    }
-    p { line-height: 1.5; color: #647084; }
-    label { display: block; font-size: 14px; font-weight: 600; margin: 18px 0 7px; }
-    input {
-      width: 100%; padding: 14px; border: 1px solid #dce1e8;
-      border-radius: 10px; font-size: 15px; background: white;
-    }
-    button {
-      width: 100%; padding: 15px; margin-top: 15px; border: 0;
-      border-radius: 11px; background: #16a36a; color: white;
-      font-size: 16px; font-weight: 700; cursor: pointer;
-    }
-    #status { font-size: 14px; overflow-wrap: anywhere; }
-    .muted { font-size: 12px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101713">
+<title>FalaSaldo</title>
+<style>
+:root{color-scheme:dark;--bg:#101713;--panel:#1b251f;--green:#b8f36b;--muted:#aab7ae;--red:#ff8d8d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f6f8f6;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:22px 16px 40px}
+main{max-width:540px;margin:auto}
+h1{font-size:34px;margin:12px 0 4px;letter-spacing:-1px}
+h1 span{color:var(--green)}
+p{color:var(--muted);line-height:1.5}
+.panel{background:var(--panel);border:1px solid #344239;border-radius:18px;padding:18px;margin:16px 0}
+label{display:block;font-size:13px;color:var(--muted);margin:13px 0 6px}
+input,select,button{width:100%;padding:13px;border-radius:10px;font:inherit}
+input,select{background:#111a15;color:white;border:1px solid #45544a}
+button{border:0;background:var(--green);color:#15200f;font-weight:700;margin-top:12px;cursor:pointer}
+button.secondary{background:#303d34;color:white}
+button.danger{background:#472929;color:#ffdede;width:auto;padding:8px 11px;margin:0}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+.hidden{display:none!important}
+#status{font-size:14px;overflow-wrap:anywhere}
+.balance{font-size:30px;font-weight:750;margin:8px 0}
+.item{padding:13px 0;border-bottom:1px solid #344239}
+.item:last-child{border:0}
+.itemtop{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.amount{font-weight:750;white-space:nowrap}
+.income{color:var(--green)}.expense{color:var(--red)}
+small{color:var(--muted)}
+</style>
 </head>
 <body>
 <main>
-  <div class="logo">Fala<span>Saldo</span></div>
-  <p>Teu dinheiro organizado. Tu fala, o FalaSaldo te ajuda.</p>
+  <h1>Fala<span>Saldo</span></h1>
+  <p>Teu dinheiro organizado, sem complicação.</p>
 
-  <section class="card">
-    <h2>Conectar aplicativo</h2>
-    <p>Vamos conectar teu projeto ao Supabase.</p>
-
-    <label for="url">URL do projeto Supabase</label>
-    <input id="url" type="url" placeholder="https://teuprojeto.supabase.co"
-      autocomplete="url">
-
-    <label for="key">Publishable key</label>
-    <input id="key" type="password" placeholder="sb_publishable_..."
-      autocomplete="off">
-
-    <button id="connect">Conectar FalaSaldo</button>
-    <p id="status" role="status">Aguardando configuração.</p>
-    <p class="muted">Usa somente a URL do teu projeto e a publishable key.
-    Nunca coloques uma secret key aqui.</p>
+  <section class="panel" id="config">
+    <strong>Conectar ao teu banco de dados</strong>
+    <label>URL do projeto Supabase</label>
+    <input id="url" type="url" value="https://iqfgoqxvcxoctmipwgze.supabase.co">
+    <label>Chave publishable do Supabase</label>
+    <input id="key" type="text" placeholder="Cole aqui a chave publishable" autocomplete="off">
+    <button id="connect">Conectar</button>
+    <p><small>Use somente a chave publishable, nunca uma chave secret ou service_role.</small></p>
   </section>
+
+  <section class="panel hidden" id="auth">
+    <strong>Acessar o FalaSaldo</strong>
+    <label>E-mail</label>
+    <input id="email" type="email" autocomplete="email" placeholder="teu@email.com">
+    <label>Senha</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Mínimo de 6 caracteres">
+    <button id="login">Entrar</button>
+    <button class="secondary" id="signup">Criar minha conta</button>
+    <button class="secondary" id="back">Trocar conexão</button>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="panel">
+      <small>Saldo dos lançamentos registrados</small>
+      <div class="balance" id="balance">R$ 0,00</div>
+      <div class="row">
+        <div><small>Receitas</small><div class="income" id="incomeTotal">R$ 0,00</div></div>
+        <div><small>Despesas</small><div class="expense" id="expenseTotal">R$ 0,00</div></div>
+      </div>
+    </div>
+
+    <form class="panel" id="entryForm">
+      <strong>Novo lançamento</strong>
+      <label>Tipo</label>
+      <select id="kind">
+        <option value="expense">Despesa</option>
+        <option value="income">Receita</option>
+      </select>
+      <label>Valor em reais</label>
+      <input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0,00">
+      <label>Descrição</label>
+      <div class="row">
+        <input id="description" placeholder="Ex.: mercado" required>
+        <button type="button" class="secondary" id="mic" style="width:58px;flex:none">🎙️</button>
+      </div>
+      <label>Categoria</label>
+      <input id="category" placeholder="Ex.: alimentação">
+      <label>Forma de pagamento</label>
+      <select id="payment">
+        <option value="pix">Pix</option>
+        <option value="credit_card">Cartão de crédito</option>
+        <option value="debit_card">Cartão de débito</option>
+        <option value="cash">Dinheiro</option>
+        <option value="bank_transfer">Transferência</option>
+        <option value="other">Outro</option>
+      </select>
+      <label>Data</label>
+      <input id="date" type="date" required>
+      <button type="submit">Salvar lançamento</button>
+    </form>
+
+    <section class="panel">
+      <strong>Meus lançamentos</strong>
+      <div id="history"><p>Carregando...</p></div>
+      <button class="secondary" id="refresh">Atualizar histórico</button>
+      <button class="secondary" id="logout">Sair da conta</button>
+    </section>
+  </section>
+
+  <p id="status" role="status">Pronto para conectar.</p>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const urlInput = document.getElementById('url');
-const keyInput = document.getElementById('key');
-const status = document.getElementById('status');
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-document.getElementById('connect').addEventListener('click', async () => {
-  const url = urlInput.value.trim().replace(/\/+$/, '');
-  const key = keyInput.value.trim();
+let db = null;
+let currentUser = null;
+const $ = id => document.getElementById(id);
+const money = n => Number(n || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+$('date').value = today();
 
-  if (!/^https:\/\/[a-zA-Z0-9.-]+\.supabase\.co$/.test(url)) {
-    status.textContent = 'Confere a URL do projeto e tenta novamente.';
-    return;
-  }
-  if (!key.startsWith('sb_publishable_') && !key.startsWith('eyJ')) {
-    status.textContent = 'Confere a publishable key.';
-    return;
-  }
+function status(msg){ $('status').textContent = msg; }
+function show(id,yes){ $(id).classList.toggle('hidden',!yes); }
+function errorText(e){ return e?.message || 'Ocorreu um erro. Tente novamente.'; }
 
-  status.textContent = 'Conectando...';
-  try {
-    const client = window.supabase.createClient(url, key);
-    const { error } = await client.auth.getSession();
-    if (error) throw error;
+function connect(){
+  const url = $('url').value.trim().replace(/\/+$/,'');
+  const key = $('key').value.trim();
+  if(!url || !key){ status('Preencha a URL e a chave publishable.'); return false; }
+  try{
+    db = createClient(url,key);
+    localStorage.setItem('falasaldo_url',url);
+    localStorage.setItem('falasaldo_key',key);
+    show('config',false);
+    show('auth',true);
+    status('Conexão configurada. Entre ou crie sua conta.');
+    return true;
+  }catch(e){ status(errorText(e)); return false; }
+}
 
-    sessionStorage.setItem('falasaldo_url', url);
-    sessionStorage.setItem('falasaldo_key', key);
-    status.textContent =
-      'Conexão verificada! Próximo passo: configurar acesso e lançamentos.';
-    keyInput.value = '';
-  } catch (e) {
-    status.textContent = 'Não foi possível verificar: ' + e.message;
-  }
-});
+$('url').value = localStorage.getItem('falasaldo_url') || $('url').value;
+$('key').value = localStorage.getItem('falasaldo_key') || '';
+$('connect').onclick = async () => {
+  if(!connect()) return;
+  const {data,error} = await db.auth.getSession();
+  if(error){status(error.message);return;}
+  if(data.session) await enterApp(data.session.user);
+};
+
+$('back').onclick = () => {
+  show('auth',false);show('config',true);
+};
+$('login').onclick = async () => {
+  if(!db && !connect()) return;
+  const {data,error} = await db.auth.signInWithPassword({
+    email:$('email').value.trim(),password:$('password').value
+  });
+  if(error){status(error.message);return;}
+  await enterApp(data.user);
+};
+$('signup').onclick = async () => {
+  if(!db && !connect()) return;
+  const {data,error} = await db.auth.signUp({
+    email:$('email').value.trim(),password:$('password').value
+  });
+  if(error){status(error.message);return;}
+  if(data.session) await enterApp(data.user);
+  else status('Conta solicitada! Confira teu e-mail para confirmar o cadastro, se solicitado, e depois entre.');
+};
+
+async function enterApp(user){
+  currentUser=user;
+  show('config',false);show('auth',false);show('app',true);
+  status('Conectado como '+user.email);
+  await loadTransactions();
+}
+
+$('logout').onclick = async () => {
+  if(db) await db.auth.signOut();
+  currentUser=null;show('app',false);show('auth',true);
+  status('Você saiu da conta.');
+};
+
+async function loadTransactions(){
+  if(!db || !currentUser) return;
+  status('Buscando lançamentos...');
+  const {data,error} = await db.from('transactions')
+    .select('*').order('created_at',{ascending:false});
+  if(error){$('history').textContent='Não foi possível carregar os lançamentos: '+error.message;status('Confira as permissões da tabela no Supabase.');return;}
+  const mine=(data||[]).filter(t=>t.user_id===currentUser.id);
+  const income=mine.filter(t=>t.kind==='income').reduce((s,t)=>s+Number(t.amount),0);
+  const expenses=mine.filter(t=>t.kind==='expense').reduce((s,t)=>s+Number(t.amount),0);
+  $('incomeTotal').textContent=money(income);
+  $('expenseTotal').textContent=money(expenses);
+  $('balance').textContent=money(income-expenses);
+  $('history').replaceChildren();
+  if(!mine.length){$('history').innerHTML='<p>Ainda não há lançamentos.</p>';status('Conectado. Nenhum lançamento encontrado.');return;}
+  mine.forEach(t=>{
+    const item=document.createElement('div');item.className='item';
+    const top=document.createElement('div');top.className='itemtop';
+    const info=document.createElement('div');
+    const desc=document.createElement('strong');desc.textContent=t.description||t.category||'Lançamento';
+    const detail=document.createElement('div');
+    const small=document.createElement('small');
+    small.textContent=(t.category||'Sem categoria')+' · '+(t.transaction_date||'Sem data');
+    detail.append(small);info.append(desc,detail);
+    const right=document.createElement('div');
+    const value=document.createElement('span');
+    value.className='amount '+(t.kind==='income'?'income':'expense');
+    value.textContent=(t.kind==='income'?'+ ':'− ')+money(t.amount);
+    const del=document.createElement('button');del.className='danger';del.textContent='Excluir';
+    del.onclick=()=>deleteTransaction(t.id);
+    right.append(value,document.createElement('br'),del);
+    top.append(info,right);item.append(top);$('history').append(item);
+  });
+  status('Lançamentos atualizados.');
+}
+
+$('entryForm').onsubmit = async e => {
+  e.preventDefault();
+  if(!db || !currentUser){status('Entre na sua conta primeiro.');return;}
+  const record={
+    user_id:currentUser.id,
+    kind:$('kind').value,
+    amount:Number($('amount').value),
+    category:$('category').value.trim()||'Outros',
+    description:$('description').value.trim(),
+    payment_method:$('payment').value,
+    transaction_date:$('date').value
+  };
+  status('Salvando...');
+  const {error}=await db.from('transactions').insert(record);
+  if(error){status('Não salvou: '+error.message);return;}
+  $('amount').value='';$('description').value='';$('category').value='';
+  $('date').value=today();
+  await loadTransactions();
+};
+
+async function deleteTransaction(id){
+  if(!confirm('Excluir este lançamento?'))return;
+  const {error}=await db.from('transactions').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){status('Não foi possível excluir: '+error.message);return;}
+  await loadTransactions();
+}
+$('refresh').onclick=loadTransactions;
+
+$('mic').onclick=()=>{
+  const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Speech){status('O reconhecimento de voz não está disponível neste navegador. Você pode digitar o lançamento.');return;}
+  const rec=new Speech();rec.lang='pt-BR';rec.interimResults=false;
+  status('Pode falar a descrição da despesa.');
+  rec.onresult=e=>{$('description').value=e.results[0][0].transcript;};
+  rec.onerror=()=>status('Não consegui ouvir. Tente novamente ou digite.');
+  rec.onend=()=>status('Confira a descrição e preencha o valor antes de salvar.');
+  rec.start();
+};
+
+async function init(){
+  const url=localStorage.getItem('falasaldo_url');
+  const key=localStorage.getItem('falasaldo_key');
+  if(!url||!key)return;
+  db=createClient(url,key);
+  const {data,error}=await db.auth.getSession();
+  if(error){status(error.message);return;}
+  if(data.session) await enterApp(data.session.user);
+  else {show('config',false);show('auth',true);status('Entre na sua conta para continuar.');}
+}
+init();
 </script>
 </body>
 </html>
